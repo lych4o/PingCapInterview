@@ -1,0 +1,5 @@
+package mapreduce
+
+func Run() {
+
+}
