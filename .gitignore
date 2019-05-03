@@ -3,3 +3,9 @@
 
 #swp file
 *.swp
+
+#temporary map output
+mapF_out
+
+#temporary input file
+input.txt

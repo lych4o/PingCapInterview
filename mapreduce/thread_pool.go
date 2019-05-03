@@ -52,7 +52,7 @@ func (s *FStack) Pop() (func(chan bool), error) {
 
 //ThrdPool to control the num of executing thread.
 type ThrdPool struct {
-    NumThrd int //Number of max executing thread.
+    MaxThrd int //Number of max executing thread.
     NewThrdCh chan func(chan bool) //Channel to send new thread.
     DoneCh chan bool //Channel to send task done signal after NewThrdCh is closed.
     numExecuting int //Numer of executing thread.
@@ -60,26 +60,26 @@ type ThrdPool struct {
     innerThrdCh chan bool //Inner channel to get done signal from executing thread.
 }
 
-//Return a new ThrdPool with input NumThrd, NewThrdCh, DoneCh.
+//Return a new ThrdPool with input MaxThrd, NewThrdCh, DoneCh.
 func NewThrdPool(
-    NumThrd int,
+    MaxThrd int,
     NewThrdCh chan func(chan bool),
     DoneCh chan bool,
     ) *ThrdPool {
     ret := ThrdPool{
-        NumThrd: NumThrd,
+        MaxThrd: MaxThrd,
         numExecuting: 0,
         NewThrdCh: NewThrdCh,
         DoneCh: DoneCh,
         thrdStack: NewFStack(),
-        innerThrdCh: make(chan bool),
+        innerThrdCh: make(chan bool, MaxThrd),
     }
     return &ret
 }
 
 //Try to run thread in stack as much as possible.
 func (pool *ThrdPool) runThrd() {
-    for pool.numExecuting < pool.NumThrd && !pool.thrdStack.Empty() {
+    for pool.numExecuting < pool.MaxThrd && !pool.thrdStack.Empty() {
         pool.numExecuting++
         f, err := pool.thrdStack.Pop()
         if err != nil { panic(err.Error()) }

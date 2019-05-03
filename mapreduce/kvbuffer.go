@@ -4,17 +4,25 @@ import (
     "bufio"
     "os"
     "sort"
+    "fmt"
     "strconv"
 )
 
-//Size of KvBuffer (Bytes).
-var KvBufferSize int64 = 1024*1024*64
+func init() {
+    spill_round = 0
+}
 
-//SpillRatio.
-var SpillRatio float64 = 0.8
+var (
+    //Size of KvBuffer (Bytes).
+    //KvBufferSize int64 = 1024*1024*64
+    KvBufferSize int64 = 1024
 
-//Use to define filename_id.
-var spill_round int = 0
+    //SpillRatio.
+    SpillRatio float64 = 0.8
+
+    //Use to define filename_id.
+    spill_round int = 0
+)
 
 type PKV struct {
     Part int
@@ -37,15 +45,21 @@ func (a PKVs) Less(i, j int) bool {
     } else { return a[i].Key <= a[j].Key }
 }
 
-func spill(kvs []KeyValue, L int64, R int64, nReduce int, outCh chan string) {
-    ret, file, wr := make([]string, nReduce), make([]*os.File, nReduce), make([]*bufio.Writer, nReduce)
+func spill(kvs []KeyValue, L int64, R int64, nReduce int) {
+    ret := make([]string, nReduce)
+    file := make([]*os.File, nReduce)
+    wr := make([]*bufio.Writer, nReduce)
+
+    mkdrErr := os.MkdirAll("./mapF_out/", 0777)
+    if mkdrErr != nil { panic(mkdrErr.Error()) }
+
     for i:=0; i<nReduce; i++ {
         var openErr error
-        ret[i] = strconv.Itoa(i) + "_" + strconv.Itoa(spill_round)
+        ret[i] = "./mapF_out/" + strconv.Itoa(i) + "_" + strconv.Itoa(spill_round) + ".mapout"
         file[i], openErr = os.OpenFile(ret[i], os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0666)
-        if openErr != nil { panic(openErr.Error) }
-        wr[i] = bufio.NewWriter(file[i])
+        if openErr != nil { panic(openErr.Error()) }
         defer file[i].Close()
+        wr[i] = bufio.NewWriter(file[i])
     }
 
     arr := make(PKVs, (int64(R-L)+KvBufferSize)%KvBufferSize)
@@ -53,17 +67,18 @@ func spill(kvs []KeyValue, L int64, R int64, nReduce int, outCh chan string) {
     sort.Sort(arr)
 
     for i:=0; i<arr.Len(); i++ {
-        _, err := wr[arr[i].Part].WriteString(arr[i].toStr())
+        fmt.Printf("Write %v to %v, round: %v\n", arr[i].toStr(), arr[i].Part, spill_round)
+        _, err := wr[arr[i].Part].WriteString(arr[i].toStr()+"\n")
         if err != nil { panic(err.Error()) }
     }
 
     for _, w := range wr { w.Flush() }
-    for _, r := range ret { outCh <- r }
+    spill_round++
 }
 
 func KvBuffer(
     inCh chan KeyValue, //Get Key-Value pair.
-    outCh chan string, //Output file name.
+    doneCh chan bool, //Output file name.
     nReduce int,
 ) {
     L, R, size, threshold := int64(0), int64(0), int64(0), int64(float64(KvBufferSize)*SpillRatio)
@@ -72,11 +87,11 @@ func KvBuffer(
     for kv := range inCh {
         buf[R], size, R = kv, size+1, (R+1)%KvBufferSize
         if size >= threshold {
-            spill(buf, L, R, nReduce, outCh)
+            spill(buf, L, R, nReduce)
             L, size = R, 0
         }
     }
 
-    if L != R { spill(buf, L, R, nReduce, outCh) }
-    close(outCh)
+    if L != R { spill(buf, L, R, nReduce) }
+    doneCh <- true
 }
