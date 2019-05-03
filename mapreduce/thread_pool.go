@@ -5,6 +5,7 @@ import (
     //"time"
 )
 
+
 //Raise when call FStack.Pop() while FStack is empty.
 type EmptyFStackError struct {}
 
@@ -16,10 +17,13 @@ func (err *EmptyFStackError) Error() string {
 //Stack of func(chan bool).
 type FStack struct { Stk []func(chan bool) }
 
+//Initial cap(FStack.Stk)
+var StackInitSize int = 1024
+
 //Return a new FStack.
 func NewFStack() *FStack {
     ret := &FStack{}
-    ret.Stk = make([]func(chan bool), 1000)
+    ret.Stk = make([]func(chan bool), StackInitSize)
     ret.Stk = ret.Stk[:0]
     return ret
 }
@@ -78,9 +82,7 @@ func (pool *ThrdPool) runThrd() {
     for pool.numExecuting < pool.NumThrd && !pool.thrdStack.Empty() {
         pool.numExecuting++
         f, err := pool.thrdStack.Pop()
-        if err != nil {
-            //TODO
-        }
+        if err != nil { panic(err.Error()) }
         go f(pool.innerThrdCh)
     }
 }
