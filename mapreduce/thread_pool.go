@@ -5,55 +5,77 @@ import (
     //"time"
 )
 
-type emptyStackError struct {}
-func (err *emptyStackError) Error() string {
-    return "Call stack.pop() when queue is empty"
+//Raise when call FStack.Pop() while FStack is empty.
+type EmptyFStackError struct {}
+
+//Return string.
+func (err *EmptyFStackError) Error() string {
+    return "Call FStack.Pop() when queue is empty"
 }
-type FStack struct { stk []func(chan bool) }
+
+//Stack of func(chan bool).
+type FStack struct { Stk []func(chan bool) }
+
+//Return a new FStack.
 func NewFStack() *FStack {
     ret := &FStack{}
-    ret.stk = make([]func(chan bool), 1000)
-    ret.stk = ret.stk[:0]
+    ret.Stk = make([]func(chan bool), 1000)
+    ret.Stk = ret.Stk[:0]
     return ret
 }
-func (s *FStack) Size() int { return len(s.stk) }
+
+//Return the size of FStack.
+func (s *FStack) Size() int { return len(s.Stk) }
+
+//Return true if FStack is empty, otherwise false.
 func (s *FStack) Empty() bool { return s.Size() == 0 }
-func (s *FStack) Push(f func(chan bool)) { s.stk = append(s.stk, f) }
-func (s *FStack) Top() func(chan bool) { return s.stk[len(s.stk)-1] }
+
+//Push a func(chan bool) to FStack.
+func (s *FStack) Push(f func(chan bool)) { s.Stk = append(s.Stk, f) }
+
+//Return the top func(chan bool) in FStack.
+func (s *FStack) Top() func(chan bool) { return s.Stk[len(s.Stk)-1] }
+
+/*If FStack not empty, return the top func(chan bool) in FStack and nil error.
+
+Otherwise return nil func(chan bool) and an EmptyFStackError.*/
 func (s *FStack) Pop() (func(chan bool), error) {
-    if s.Empty() { return nil, &emptyStackError{} }
+    if s.Empty() { return nil, &EmptyFStackError{} }
     ret := s.Top()
-    s.stk = s.stk[:len(s.stk)-1]
+    s.Stk = s.Stk[:len(s.Stk)-1]
     return ret, nil
 }
 
+//ThrdPool to control the num of executing thread.
 type ThrdPool struct {
-    numThrd int
-    numExecuting int
-    thrdStack *FStack
-    newThrdCh chan func(chan bool)
-    doneCh chan bool
-    innerThrdCh chan bool
+    NumThrd int //Number of max executing thread.
+    NewThrdCh chan func(chan bool) //Channel to send new thread.
+    DoneCh chan bool //Channel to send task done signal after NewThrdCh is closed.
+    numExecuting int //Numer of executing thread.
+    thrdStack *FStack //Store ready thread to go.
+    innerThrdCh chan bool //Inner channel to get done signal from executing thread.
 }
 
+//Return a new ThrdPool with input NumThrd, NewThrdCh, DoneCh.
 func NewThrdPool(
-    numThrd int,
-    newThrdCh chan func(chan bool),
-    doneCh chan bool,
+    NumThrd int,
+    NewThrdCh chan func(chan bool),
+    DoneCh chan bool,
     ) *ThrdPool {
     ret := ThrdPool{
-        numThrd: numThrd,
+        NumThrd: NumThrd,
         numExecuting: 0,
-        newThrdCh: newThrdCh,
-        doneCh: doneCh,
+        NewThrdCh: NewThrdCh,
+        DoneCh: DoneCh,
         thrdStack: NewFStack(),
         innerThrdCh: make(chan bool),
     }
     return &ret
 }
 
+//Try to run thread in stack as much as possible.
 func (pool *ThrdPool) runThrd() {
-    for pool.numExecuting < pool.numThrd && !pool.thrdStack.Empty() {
+    for pool.numExecuting < pool.NumThrd && !pool.thrdStack.Empty() {
         pool.numExecuting++
         f, err := pool.thrdStack.Pop()
         if err != nil {
@@ -63,14 +85,20 @@ func (pool *ThrdPool) runThrd() {
     }
 }
 
+/*Use go ThrdPool.Run() to call.
+
+Send thread by ThrdPool.NewThrdCh.
+
+Close ThrdPool.NewThrdCh when no more trhead to go.
+
+After existing thread done and ThrdPool.NewThrdCh closed, send true to DoneCh.*/
 func (pool *ThrdPool) Run() {
-    //Use go to call
     for thrdInput := true; thrdInput == true; {
         select {
             case <-pool.innerThrdCh:
                 pool.numExecuting--
                 pool.runThrd()
-            case f, ok := <-pool.newThrdCh:
+            case f, ok := <-pool.NewThrdCh:
                 if f != nil { pool.thrdStack.Push(f) }
                 pool.runThrd()
                 if ok == false { thrdInput = false }
@@ -81,5 +109,5 @@ func (pool *ThrdPool) Run() {
         pool.numExecuting--
         pool.runThrd()
     }
-    pool.doneCh <- true
+    pool.DoneCh <- true
 }

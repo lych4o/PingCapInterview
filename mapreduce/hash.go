@@ -3,6 +3,8 @@ package mapreduce
 import (
     "hash/fnv"
 )
+
+//Given a string, return a fnv hash value modulo mod.
 func MHash(str string, mod int) int {
     hash32 := fnv.New32()
     _, err := hash32.Write([]byte(str))
