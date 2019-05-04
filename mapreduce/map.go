@@ -1,7 +1,7 @@
 package mapreduce
 
 import (
-    "fmt"
+    //"fmt"
     "strings"
     "strconv"
 )
@@ -9,7 +9,7 @@ import (
 func ExampleMapF(lineIdx string, contents string) []KeyValue {
     lines := strings.Split(contents, "\n")
     startIdx, parseErr := strconv.ParseInt(lineIdx, 10, 64)
-    fmt.Printf("Enter MapF %v\n", startIdx)
+    //fmt.Printf("Enter MapF %v\n", startIdx)
     if parseErr != nil { panic(parseErr.Error()) }
 
     ret := make([]KeyValue, 10000)

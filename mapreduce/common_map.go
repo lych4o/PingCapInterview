@@ -58,8 +58,7 @@ func doMap(
     for i, pre:=int64(1), int64(1); ;i++{
         line, _, rdErr := reader.ReadLine()
         if rdErr == io.EOF || int64(len(line) + 1 + len(contents)) > MaxMapBuffer {
-            thrd := getMapThrd(strconv.FormatInt(pre, 10), contents, kvBufferCh, mapF)
-            newThrd <- thrd
+            newThrd <- getMapThrd(strconv.FormatInt(pre, 10), contents, kvBufferCh, mapF)
             contents, pre = "", i+1
             if rdErr == io.EOF { break }
         }

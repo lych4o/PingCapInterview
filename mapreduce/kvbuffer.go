@@ -4,7 +4,7 @@ import (
     "bufio"
     "os"
     "sort"
-    "fmt"
+    //"fmt"
     "strconv"
 )
 
@@ -14,8 +14,7 @@ func init() {
 
 var (
     //Size of KvBuffer (Bytes).
-    //KvBufferSize int64 = 1024*1024*64
-    KvBufferSize int64 = 1024
+    KvBufferSize int64 = 1024*1024*64
 
     //SpillRatio.
     SpillRatio float64 = 0.8
@@ -50,12 +49,9 @@ func spill(kvs []KeyValue, L int64, R int64, nReduce int) {
     file := make([]*os.File, nReduce)
     wr := make([]*bufio.Writer, nReduce)
 
-    mkdrErr := os.MkdirAll("./mapF_out/", 0777)
-    if mkdrErr != nil { panic(mkdrErr.Error()) }
-
     for i:=0; i<nReduce; i++ {
         var openErr error
-        ret[i] = "./mapF_out/" + strconv.Itoa(i) + "_" + strconv.Itoa(spill_round) + ".mapout"
+        ret[i] = MapDir + strconv.Itoa(i) + "_" + strconv.Itoa(spill_round) + ".mapOut"
         file[i], openErr = os.OpenFile(ret[i], os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0666)
         if openErr != nil { panic(openErr.Error()) }
         defer file[i].Close()
@@ -67,7 +63,7 @@ func spill(kvs []KeyValue, L int64, R int64, nReduce int) {
     sort.Sort(arr)
 
     for i:=0; i<arr.Len(); i++ {
-        fmt.Printf("Write %v to %v, round: %v\n", arr[i].toStr(), arr[i].Part, spill_round)
+        //fmt.Printf("Write %v to %v, round: %v\n", arr[i].toStr(), arr[i].Part, spill_round)
         _, err := wr[arr[i].Part].WriteString(arr[i].toStr()+"\n")
         if err != nil { panic(err.Error()) }
     }
@@ -83,6 +79,9 @@ func KvBuffer(
 ) {
     L, R, size, threshold := int64(0), int64(0), int64(0), int64(float64(KvBufferSize)*SpillRatio)
     buf := make([]KeyValue, KvBufferSize)
+
+    mkdrErr := os.MkdirAll(MapDir, 0777)
+    if mkdrErr != nil { panic(mkdrErr.Error()) }
 
     for kv := range inCh {
         buf[R], size, R = kv, size+1, (R+1)%KvBufferSize

@@ -7,5 +7,9 @@
 #temporary map output
 mapF_out
 
+#temporary reduce input
+reduceF_in
+
 #temporary input file
 input.txt
+
