@@ -90,22 +90,28 @@ func (err *testError) Error() string { return err.info }
 func singleTest(n int, wordLen int, characterNum int, testId int) error {
     fileGen(n, wordLen, characterNum)
     t1 := time.Now()
-    ans1 := RunExample(InputFileName, 4)
+    ans1 := RunExample1(InputFileName, 4)
     mr_time := time.Since(t1)
+    fmt.Printf("mr_time: %v\n", mr_time)
+    t1 = time.Now()
+    _ = RunExample(InputFileName, 4)
+    mr1_time := time.Since(t1)
+    fmt.Printf("mr1_time: %v\n", mr1_time)
     t1 = time.Now()
     ans2 := check(InputFileName)
     check_time := time.Since(t1)
+    fmt.Printf("check_time: %v\n", check_time)
     //t.Logf("ans_mr:%v, ans_checker:%v\n", ans1, ans2)
     if ans1 != ans2 { return newTestError(string("Wrong Answer! mr_output:"+ans1+", checker_output:"+ans2))
     } else {
-        fmt.Printf("Pass Test %v, mr_time: %v, check_time: %v\n", testId, mr_time, check_time)
+        fmt.Printf("Pass Test %v\n", testId)
         return nil
     }
 }
 
 func TestRunExample(t *testing.T) {
     for i:=0; i<1; i++ {
-        ok := singleTest(100000, 6, 26, i)
+        ok := singleTest(1000000, 100, 26, i)
         if ok != nil {
             t.Error(ok.Error())
         }

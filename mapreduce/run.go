@@ -76,3 +76,35 @@ func RunExample(inputFileName string, nReduce int) string{
     }
     return ret
 }
+
+func RunExample1(inputFileName string, nReduce int) string{
+    outputFileName := "./mr_output"
+
+    Run(inputFileName, outputFileName, nReduce, ExampleMapF1, ExampleReduceF)
+
+    inFile, openInErr := os.Open(inputFileName)
+    outFile, openOutErr := os.Open(outputFileName)
+    defer inFile.Close()
+    defer outFile.Close()
+    if openInErr != nil { panic(openOutErr.Error()) }
+    if openOutErr != nil { panic(openOutErr.Error()) }
+
+    inRd := bufio.NewReader(inFile)
+    outRd := bufio.NewReader(outFile)
+
+    outLine, _, rdOutErr := outRd.ReadLine()
+    if rdOutErr != nil { panic(rdOutErr.Error()) }
+    index, parseErr := strconv.ParseInt(string(outLine), 10, 64)
+    if parseErr != nil { panic(parseErr.Error()) }
+
+    ret := ""
+    for i:=int64(1); i != index+1; i++ {
+        line, _, inRdErr := inRd.ReadLine()
+        if inRdErr != nil { panic(inRdErr.Error()) }
+        if i == index {
+            //fmt.Printf("The first unique word is %v\n", string(line))
+            ret = string(line)
+        }
+    }
+    return ret
+}

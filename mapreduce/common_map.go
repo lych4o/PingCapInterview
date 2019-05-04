@@ -13,10 +13,11 @@ var (
     ThrdPoolSize int = 4
 
     //Max Bytes of contents to run a map task.
-    MaxMapBuffer int64 = 20*1024*1024
+    MaxMapBuffer int64 = 1*1024*1024
+    //MaxMapBuffer int64 = 256*1024
 
     //Buffer size of thread pool channel
-    ThrdBuffer int = 1024
+    ThrdBuffer int = 6
 )
 
 //Get map thrd to send ThrdPool.
@@ -54,15 +55,19 @@ func doMap(
     go pool.Run()
 
     reader := bufio.NewReader(f)
-    var contents string = ""
+    byteContents := make([]byte, MaxMapBuffer)[:0]
+    byteLn := []byte("\n")
+    //var contents string = ""
     for i, pre:=int64(1), int64(1); ;i++{
         line, _, rdErr := reader.ReadLine()
-        if rdErr == io.EOF || int64(len(line) + 1 + len(contents)) > MaxMapBuffer {
-            newThrd <- getMapThrd(strconv.FormatInt(pre, 10), contents, kvBufferCh, mapF)
-            contents, pre = "", i+1
+        if rdErr == io.EOF || int64(len(line) + 1 + len(byteContents)) > MaxMapBuffer {
+            newThrd <- getMapThrd( strconv.FormatInt(pre, 10), string(byteContents), kvBufferCh, mapF)
+            byteContents, pre = byteContents[:0], i+1
             if rdErr == io.EOF { break }
         }
-        contents += string(line)+"\n"
+        byteContents = append(byteContents, line...)
+        byteContents = append(byteContents, byteLn...)
+        //contents += string(line)+"\n"
     }
     close(newThrd)
 }

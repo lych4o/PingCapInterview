@@ -4,7 +4,7 @@ import (
     "bufio"
     "os"
     "sort"
-    //"fmt"
+    "fmt"
     "strconv"
 )
 
@@ -14,7 +14,7 @@ func init() {
 
 var (
     //Size of KvBuffer (Bytes).
-    KvBufferSize int64 = 1024*1024*64
+    KvBufferSize int64 = 1024*1024*1
 
     //SpillRatio.
     SpillRatio float64 = 0.8
@@ -40,8 +40,8 @@ type PKVs []PKV
 func (a PKVs) Len() int { return len(a) }
 func (a PKVs) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a PKVs) Less(i, j int) bool {
-    if a[i].Part < a[j].Part { return true
-    } else { return a[i].Key <= a[j].Key }
+    if a[i].Part != a[j].Part { return a[i].Part < a[j].Part
+    } else { return a[i].Key < a[j].Key }
 }
 
 func spill(kvs []KeyValue, L int64, R int64, nReduce int) {
@@ -64,6 +64,7 @@ func spill(kvs []KeyValue, L int64, R int64, nReduce int) {
 
     for i:=0; i<arr.Len(); i++ {
         //fmt.Printf("Write %v to %v, round: %v\n", arr[i].toStr(), arr[i].Part, spill_round)
+        if arr[i].Key == "cpgdgk" { fmt.Printf("i:%v, val:%v\n",i,arr[i].Value) }
         _, err := wr[arr[i].Part].WriteString(arr[i].toStr()+"\n")
         if err != nil { panic(err.Error()) }
     }
