@@ -1,14 +1,14 @@
-#Install to local $GOPATH
+# Install to local $GOPATH
 `go get github.com/lych4o/PingCapInterview/mapreduce`
 
-#Built-in test in shell
+# Built-in test in shell
 ```
 cd $GOPATH/src/github.com/lych4o/PingCapInterview/mapreduce
 go test -v
 ```
 Change TestRunExample() in mr_test.go to modify test.
 
-#How to use outside in go
+# How to use outside in go
 ```
 import (
     mr "github.com/lych4o/PingCapInterview/mapreduce"
