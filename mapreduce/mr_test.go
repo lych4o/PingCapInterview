@@ -2,14 +2,9 @@ package mapreduce
 
 import (
     "testing"
-    "strings"
     "os"
     "math/rand"
-    "io"
-    "bufio"
-    "strconv"
     "fmt"
-    "sort"
     "time"
     //"container/heap"
 )
@@ -27,7 +22,7 @@ func randStr(n, pre int) string {
     for i:=0; i<n; i++ { y[i] += byte(rand.Intn(pre)) }
     return string(y)
 }
-func getKV(n int) []KeyValue {
+func randKV(n int) []KeyValue {
     ret := make([]KeyValue, n)
     for i:=0; i<n; i++ {
         ret[i] = KeyValue{randStr(RandKeyLen, 4), randStr(RandValLen, 4)}
@@ -45,44 +40,6 @@ func fileGen(n int, wordLen int, characterNum int) {
     }
 }
 
-type sa []string
-func (a sa) Len() int { return len(a) }
-func (a sa) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a sa) Less(i, j int) bool { return a[i] < a[j] }
-
-func check(fileName string) string {
-    arr := make(sa, 10000)[:0]
-    f, err := os.Open(fileName)
-    if err != nil { panic(err.Error()) }
-    defer f.Close()
-    rd := bufio.NewReader(f)
-
-    for i:=1; ;i++{
-        line, _, rdErr := rd.ReadLine()
-        if rdErr == io.EOF { break }
-        arr = append(arr, string(line)+" "+strconv.FormatInt(int64(i), 10))
-    }
-
-    sort.Sort(arr)
-
-    ans, min := "", int64(INT64_MAX)
-    for i,j:=0,0; i<arr.Len(); i=j {
-        kv := strings.Split(arr[i], " ")
-        k, v := kv[0], kv[1]
-        for j=i+1; j<arr.Len(); j++ {
-            jkv := strings.Split(arr[j], " ")
-            jk, _ := jkv[0], jkv[1]
-            if jk != k { break }
-        }
-        if j>i+1 { continue }
-        idx, parseErr := strconv.ParseInt(v, 10, 64)
-        if parseErr != nil { panic(parseErr.Error()) }
-        if idx < min { ans, min = k, idx }
-    }
-
-    return ans
-}
-
 type testError struct { info string }
 func newTestError(info string) *testError { return &testError{info} }
 func (err *testError) Error() string { return err.info }
@@ -90,11 +47,11 @@ func (err *testError) Error() string { return err.info }
 func singleTest(n int, wordLen int, characterNum int, testId int) error {
     fileGen(n, wordLen, characterNum)
     t1 := time.Now()
-    ans1 := RunExample1(InputFileName, 4)
+    ans1 := RunExample(InputFileName, 4)
     mr_time := time.Since(t1)
     fmt.Printf("mr_time: %v\n", mr_time)
     t1 = time.Now()
-    _ = RunExample(InputFileName, 4)
+    _ = RunExample1(InputFileName, 4)
     mr1_time := time.Since(t1)
     fmt.Printf("mr1_time: %v\n", mr1_time)
     t1 = time.Now()
@@ -104,7 +61,7 @@ func singleTest(n int, wordLen int, characterNum int, testId int) error {
     //t.Logf("ans_mr:%v, ans_checker:%v\n", ans1, ans2)
     if ans1 != ans2 { return newTestError(string("Wrong Answer! mr_output:"+ans1+", checker_output:"+ans2))
     } else {
-        fmt.Printf("Pass Test %v\n", testId)
+        fmt.Printf("Pass Test %v\n\n", testId)
         return nil
     }
 }
@@ -113,12 +70,15 @@ func singleTest(n int, wordLen int, characterNum int, testId int) error {
 Modify this function to have a different test
 **********************/
 func TestRunExample(t *testing.T) {
+
+    //Change variable there to control test
     var (
         testCaseNum int = 5
         wordNum int = 1000000
         wordLen int = 10
         characterNum int = 26
     )
+
     for i:=0; i<testCaseNum; i++ {
         ok := singleTest(wordNum, wordLen, characterNum, i)
         if ok != nil {
@@ -134,7 +94,7 @@ func TestRunExample(t *testing.T) {
 
 /*func TestReduce(t *testing.T) {
     n := 10
-    x := getKV(n)
+    x := randKV(n)
     z := make(KVRs, n)
     y := &z
     for i, _ := range x {
@@ -188,7 +148,7 @@ func TestRunExample(t *testing.T) {
     n, nReduce := 10, 4
     inCh, outCh := make(chan KeyValue, 4), make(chan bool)
     go KvBuffer(inCh, outCh, nReduce)
-    for _, kv := range getKV(n) {
+    for _, kv := range randKV(n) {
         inCh <- kv
     }
     close(inCh)
@@ -199,7 +159,7 @@ func TestRunExample(t *testing.T) {
 /*func TestSpill(t *testing.T) {
     t.Log("fuck")
     KVsize, nReduce := int(9), 3
-    kvs := getKV(KVsize)
+    kvs := randKV(KVsize)
     outCh := make(chan string)
     go Spill(kvs, 0, int64(KVsize), nReduce, outCh)
     for i:=0; i<nReduce; i++ {
