@@ -109,9 +109,18 @@ func singleTest(n int, wordLen int, characterNum int, testId int) error {
     }
 }
 
+/**********************
+Modify this function to have a different test
+**********************/
 func TestRunExample(t *testing.T) {
-    for i:=0; i<1; i++ {
-        ok := singleTest(1000000, 100, 26, i)
+    var (
+        testCaseNum int = 5
+        wordNum int = 1000000
+        wordLen int = 10
+        characterNum int = 26
+    )
+    for i:=0; i<testCaseNum; i++ {
+        ok := singleTest(wordNum, wordLen, characterNum, i)
         if ok != nil {
             t.Error(ok.Error())
         }
