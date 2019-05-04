@@ -8,7 +8,7 @@ go test -v
 ```
 Change TestRunExample() in mr_test.go to modify test.
 
-# How to use outside in go
+# How to use in go
 ```
 import (
     mr "github.com/lych4o/PingCapInterview/mapreduce"
