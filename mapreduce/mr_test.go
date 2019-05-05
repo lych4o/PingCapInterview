@@ -16,7 +16,7 @@ func (err *testError) Error() string { return err.info }
 //Single test with input file of n words whose length is wordLen, containing first-characterNum english characters. testId is trival, only to print, any integer is ok.
 func SingleTest(n int, wordLen int, characterNum int, testId int) error {
     t1 := time.Now()
-    fileGen(n, wordLen, characterNum)
+    FileGen(n, wordLen, characterNum)
     file_gen_time := time.Since(t1)
     fmt.Printf("file generator time: %v\n", file_gen_time)
 

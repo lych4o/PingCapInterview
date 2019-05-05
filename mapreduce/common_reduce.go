@@ -12,7 +12,7 @@ import (
 )
 
 var (
-
+    ReduceThrdBuffer int = 32
 )
 
 type KVR struct {
@@ -97,9 +97,9 @@ func MergeFiles(src []string, dst string) {
         //fmt.Printf("top: (%v, %v)\n", top.Key, top.Value)
         if top.Key != nowKey {
             nowKey = top.Key
-            dstWr.WriteString(nowKey + ":\n")
+            dstWr.WriteString(nowKey+":\n")
         }
-        dstWr.WriteString(top.Value + "\n")
+        dstWr.WriteString(top.Value+"\n")
         line, _, rdErr := srcRd[top.FileIdx].ReadLine()
         if rdErr != io.EOF { heap.Push(kvrPQ, Line2KVR(string(line), top.FileIdx)) }
     }
@@ -136,7 +136,7 @@ func doReduce(
         reduceIn[i] = dstName
     }
 
-    newThrd := make(chan func(chan bool), ThrdBuffer)
+    newThrd := make(chan func(chan bool), ReduceThrdBuffer)
     pool := NewThrdPool(ThrdPoolSize, newThrd, doneCh)
     go pool.Run()
 

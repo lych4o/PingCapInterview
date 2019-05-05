@@ -10,14 +10,14 @@ import (
 
 var (
     //Control the max number of thread to run map task.
-    ThrdPoolSize int = 4
+    ThrdPoolSize int = 6
 
     //Max Bytes of contents to run a map task.
     MaxMapBuffer int64 = 1*1024*1024
     //MaxMapBuffer int64 = 256*1024
 
     //Buffer size of thread pool channel
-    ThrdBuffer int = 6
+    MapThrdBuffer int = 32
 )
 
 //Get map thrd to send ThrdPool.
@@ -50,7 +50,7 @@ func doMap(
     if openErr != nil { panic(openErr.Error()) }
     defer f.Close()
 
-    newThrd := make(chan func(chan bool), ThrdBuffer)
+    newThrd := make(chan func(chan bool), MapThrdBuffer)
     pool := NewThrdPool(ThrdPoolSize, newThrd, doneCh)
     go pool.Run()
 

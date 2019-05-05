@@ -7,6 +7,15 @@ import (
     "bufio"
 )
 
+var (
+    //Channel buffer size of KvBuffer
+    KvBufChanBufferSize int = 1024
+
+    //Channel buffer size of Reduce Receiver
+    ReduceRecvChanBufferSize int = 1024
+)
+
+//Run a mapreduce
 func Run(
 	inputFileName string,
     outputFileName string,
@@ -19,7 +28,7 @@ func Run(
     err = os.RemoveAll(ReduceDir)
     if err != nil { panic(err.Error()) }
 
-    inCh, mapShuffleDoneCh := make(chan KeyValue), make(chan bool)
+    inCh, mapShuffleDoneCh := make(chan KeyValue, KvBufChanBufferSize), make(chan bool)
     mapDoneCh := make(chan bool)
     go KvBuffer(inCh, mapShuffleDoneCh, nReduce)
     doMap(inputFileName, nReduce, inCh, mapDoneCh, mapF)
@@ -29,7 +38,7 @@ func Run(
 
 	//fmt.Println("Map Done!")
 
-    reduceResultCh, returnCh := make(chan string), make(chan string)
+    reduceResultCh, returnCh := make(chan string, ReduceRecvChanBufferSize), make(chan string)
     go resultRecv(reduceResultCh, returnCh)
     reduceDoneCh := make(chan bool)
     doReduce(nReduce, reduceResultCh, reduceDoneCh, reduceF)
@@ -45,6 +54,7 @@ func Run(
     //fmt.Println("Reduce Done!")
 }
 
+//Run use ExampleMapF and ExampleReduceF
 func RunExample(inputFileName string, nReduce int) string{
     outputFileName := "./mr_output"
 
@@ -77,6 +87,7 @@ func RunExample(inputFileName string, nReduce int) string{
     return ret
 }
 
+//Run use ExampleMapF1 and ExampleReduceF
 func RunExample1(inputFileName string, nReduce int) string{
     outputFileName := "./mr_output"
 
