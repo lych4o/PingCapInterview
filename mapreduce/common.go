@@ -9,7 +9,10 @@ const (
 )
 
 var (
+    //Directory to store map intermediate output
     MapDir string = "./mapF_out/"
+
+    //Directory to store reduce intermediate intput
     ReduceDir string = "./reduceF_in/"
 )
 

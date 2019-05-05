@@ -14,7 +14,8 @@ func (a sa) Len() int { return len(a) }
 func (a sa) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a sa) Less(i, j int) bool { return a[i] < a[j] }
 
-func check(fileName string) string {
+//Checker
+func Check(fileName string) string {
     arr := make(sa, 10000)[:0]
     f, err := os.Open(fileName)
     if err != nil { panic(err.Error()) }
