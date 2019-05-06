@@ -4,6 +4,7 @@ import (
     "strconv"
 )
 
+//Get reduce result to decide First unique word.
 func resultRecv(
     resultCh chan string,
     returnCh chan string,

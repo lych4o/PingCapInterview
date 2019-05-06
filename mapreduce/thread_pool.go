@@ -1,8 +1,7 @@
 package mapreduce
 
 import (
-    //"fmt"
-    //"time"
+
 )
 
 //ThrdPool to control the num of executing thread.

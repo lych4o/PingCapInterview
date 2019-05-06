@@ -4,8 +4,6 @@ import (
     "os"
     "math/rand"
     "time"
-    //"heap"
-    //"container/heap"
 )
 
 func init() { rand.Seed(time.Now().UnixNano()) }
@@ -26,7 +24,6 @@ func RandKV(n, keyLen, valLen int) []KeyValue {
     ret := make([]KeyValue, n)
     for i:=0; i<n; i++ {
         ret[i] = KeyValue{RandStr(keyLen, 4), RandStr(valLen, 4)}
-        //fmt.Printf("kv[%v]: %v\n", i, ret[i].toStr())
     }
     return ret
 }
@@ -38,7 +35,6 @@ func FileGen(n int, wordLen int, characterNum int) {
     for i:=0; i<n; i++ {
         line := RandStr(wordLen, characterNum) + "\n"
         f.WriteString(line)
-        //fmt.Printf(line)
     }
 }
 

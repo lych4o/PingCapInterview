@@ -4,7 +4,6 @@ import (
     "bufio"
     "os"
     "sort"
-    "fmt"
     "strconv"
 )
 
@@ -14,7 +13,7 @@ func init() {
 
 var (
     //Size of KvBuffer (Bytes).
-    KvBufferSize int64 = 1024*1024*1
+    KvBufferSize int64 = 4*1024*1024*1024
 
     //SpillRatio.
     SpillRatio float64 = 0.8
@@ -23,6 +22,7 @@ var (
     spill_round int = 0
 )
 
+//Use to sort.
 type PKV struct {
     Part int
     Key, Value string
@@ -44,6 +44,7 @@ func (a PKVs) Less(i, j int) bool {
     } else { return a[i].Key < a[j].Key }
 }
 
+//Write buffer to files.
 func spill(kvs []KeyValue, L int64, R int64, nReduce int) {
     ret := make([]string, nReduce)
     file := make([]*os.File, nReduce)
@@ -63,8 +64,6 @@ func spill(kvs []KeyValue, L int64, R int64, nReduce int) {
     sort.Sort(arr)
 
     for i:=0; i<arr.Len(); i++ {
-        //fmt.Printf("Write %v to %v, round: %v\n", arr[i].toStr(), arr[i].Part, spill_round)
-        if arr[i].Key == "cpgdgk" { fmt.Printf("i:%v, val:%v\n",i,arr[i].Value) }
         _, err := wr[arr[i].Part].WriteString(arr[i].toStr()+"\n")
         if err != nil { panic(err.Error()) }
     }

@@ -2,7 +2,6 @@ package mapreduce
 
 import (
     "strings"
-    //"fmt"
     "io"
     "container/heap"
     "strconv"
@@ -12,9 +11,14 @@ import (
 )
 
 var (
+    //Size of thread pool to run reduce.
+    ReduceThrdPoolSize int = 4
+
+    //Size of channel buffer of reduce thread.
     ReduceThrdBuffer int = 32
 )
 
+//Use to sort.
 type KVR struct {
     Key, Value string
     FileIdx int
@@ -41,15 +45,16 @@ func (a *KVRs) Pop() interface{} {
     return ret
 }
 
+//Parse filename to get partition.
 func getPartition(file os.FileInfo) int {
     x, parseErr := strconv.ParseInt(strings.Split(file.Name(), "_")[0], 10, 32)
     if parseErr != nil {
-        //fmt.Printf("map output filename format wrong!\n")
         panic(parseErr.Error())
     }
     return int(x)
 }
 
+//Get map file by name.
 func getMapOutFile(nReduce int) [][]string {
     ret := make([][]string, nReduce)
     for i:=0; i<nReduce; i++ { ret[i] = make([]string, 100)[:0] }
@@ -66,12 +71,12 @@ func getMapOutFile(nReduce int) [][]string {
     return ret
 }
 
+//Merge single partition files from different spill_rounds.
 func MergeFiles(src []string, dst string) {
     srcF := make([]*os.File, len(src))
     srcRd := make([]*bufio.Reader, len(src))
     var openError error
     for i, fname := range src {
-        //fmt.Printf("Opening \"%v\"\n", fname)
         srcF[i], openError = os.Open(fname)
         if openError != nil { panic(openError.Error()) }
         defer srcF[i].Close()
@@ -94,7 +99,6 @@ func MergeFiles(src []string, dst string) {
     dstWr := bufio.NewWriter(dstF)
     for len(*kvrPQ) > 0 {
         top := heap.Pop(kvrPQ).(KVR)
-        //fmt.Printf("top: (%v, %v)\n", top.Key, top.Value)
         if top.Key != nowKey {
             nowKey = top.Key
             dstWr.WriteString(nowKey+":\n")
@@ -106,6 +110,7 @@ func MergeFiles(src []string, dst string) {
     dstWr.Flush()
 }
 
+//Get thread to run reduce.
 func getReduceThrd(
     key string,
     values *([]string),
@@ -119,6 +124,7 @@ func getReduceThrd(
     }
 }
 
+//Do reduce based on map out.
 func doReduce(
     nReduce int,
     resultCh chan string,
@@ -130,14 +136,13 @@ func doReduce(
     mkdrErr := os.MkdirAll(ReduceDir, 0777)
     if mkdrErr != nil { panic(mkdrErr.Error()) }
     for i, fs := range files {
-        //fmt.Printf("Merging %v partition:\n", i)
         dstName := ReduceDir + "/" + strconv.FormatInt(int64(i), 10) + ".reduceIn"
         MergeFiles(fs, dstName)
         reduceIn[i] = dstName
     }
 
     newThrd := make(chan func(chan bool), ReduceThrdBuffer)
-    pool := NewThrdPool(ThrdPoolSize, newThrd, doneCh)
+    pool := NewThrdPool(ReduceThrdPoolSize, newThrd, doneCh)
     go pool.Run()
 
     for i:=0; i<nReduce; i++ {

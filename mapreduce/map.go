@@ -1,13 +1,12 @@
 package mapreduce
 
 import (
-    //"fmt"
     "strings"
     "strconv"
 )
 
+//Origin version.
 func ExampleMapF(lineIdx string, contents string) []KeyValue {
-    //fmt.Printf("in map\n")
     lines := strings.Split(contents, "\n")
     startIdx, parseErr := strconv.ParseInt(lineIdx, 10, 64)
     if parseErr != nil { panic(parseErr.Error()) }
@@ -24,8 +23,8 @@ func ExampleMapF(lineIdx string, contents string) []KeyValue {
     return ret
 }
 
+//[]Byte to replace some string version.
 func ExampleMapF1(lineIdx string, contents string) []KeyValue {
-    //fmt.Println("map in")
     startIdx, parseErr := strconv.ParseInt(lineIdx, 10, 64)
     if parseErr != nil { panic(parseErr.Error()) }
 

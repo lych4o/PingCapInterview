@@ -2,7 +2,6 @@ package mapreduce
 
 import (
     "os"
-    //"fmt"
     "strconv"
     "bufio"
 )
@@ -36,8 +35,6 @@ func Run(
     close(inCh)
     <-mapShuffleDoneCh
 
-	//fmt.Println("Map Done!")
-
     reduceResultCh, returnCh := make(chan string, ReduceRecvChanBufferSize), make(chan string)
     go resultRecv(reduceResultCh, returnCh)
     reduceDoneCh := make(chan bool)
@@ -51,7 +48,6 @@ func Run(
     defer outFile.Close()
     outFile.WriteString(result)
 
-    //fmt.Println("Reduce Done!")
 }
 
 //Run use ExampleMapF and ExampleReduceF
@@ -80,7 +76,6 @@ func RunExample(inputFileName string, nReduce int) string{
         line, _, inRdErr := inRd.ReadLine()
         if inRdErr != nil { panic(inRdErr.Error()) }
         if i == index {
-            //fmt.Printf("The first unique word is %v\n", string(line))
             ret = string(line)
         }
     }
@@ -113,7 +108,6 @@ func RunExample1(inputFileName string, nReduce int) string{
         line, _, inRdErr := inRd.ReadLine()
         if inRdErr != nil { panic(inRdErr.Error()) }
         if i == index {
-            //fmt.Printf("The first unique word is %v\n", string(line))
             ret = string(line)
         }
     }

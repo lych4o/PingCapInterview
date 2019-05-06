@@ -1,7 +1,6 @@
 package mapreduce
 
 import (
-    //"fmt"
     "io"
     "bufio"
     "os"
@@ -10,10 +9,10 @@ import (
 
 var (
     //Control the max number of thread to run map task.
-    ThrdPoolSize int = 6
+    MapThrdPoolSize int = 4
 
     //Max Bytes of contents to run a map task.
-    MaxMapBuffer int64 = 1*1024*1024
+    MaxMapBuffer int64 = 1024*1024*1024
     //MaxMapBuffer int64 = 256*1024
 
     //Buffer size of thread pool channel
@@ -51,7 +50,7 @@ func doMap(
     defer f.Close()
 
     newThrd := make(chan func(chan bool), MapThrdBuffer)
-    pool := NewThrdPool(ThrdPoolSize, newThrd, doneCh)
+    pool := NewThrdPool(MapThrdPoolSize, newThrd, doneCh)
     go pool.Run()
 
     reader := bufio.NewReader(f)

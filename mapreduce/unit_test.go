@@ -4,7 +4,6 @@ package mapreduce
     "testing"
     "os"
     "math/rand"
-    "fmt"
     "time"
     //"container/heap"
 )*/
